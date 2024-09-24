@@ -8,6 +8,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 
 from dotenv import load_dotenv
 
@@ -24,7 +25,7 @@ def coletar_mensagens():
     sleep(5)
 
     # precisa logar ?
-    delay = 5
+    delay = 60
     wait = WebDriverWait(navegador, delay)
 
     try:
@@ -119,12 +120,19 @@ def resumir_mensagens(mensagens: list[str]):
     systemMessage = "Você é um assistente especializado em resumir conversas de grupos de mensagens. Seu objetivo é criar uma timeline de eventos relevantes, destacando os momentos de maior tensão e humor, e fornecendo um resumo claro e envolvente da conversa. Sua resposta deve ser organizada de forma cronológica e destacar os pontos principais, facilitando a compreensão da evolução da conversa."
     prompt = 'A seguir estão mensagens de um grupo de WhatsApp. Resuma a conversa destacando os momentos mais importantes, especialmente focando em elementos de tensão e humor. Organize os eventos em uma linha do tempo clara e concisa para facilitar a leitura. O resumo deve capturar a essência das interações e fornecer uma visão geral dos momentos mais relevantes. Aqui estão as mensagens: \n' 
 
+    provider = os.getenv("PROVIDER", "OPENAI")
     model = os.getenv("MODEL", "gpt-4o")
-    llm = ChatOpenAI(temperature=0, model=model)
+
+
+    if (provider == "OLLAMA"):
+        llm = ChatOllama(temperature=0, model=model)
+    else :
+        llm = ChatOpenAI(temperature=0, model=model)
+    
     messages = [("system", systemMessage)] + [("human", prompt+"\n".join(mensagens))]
 
     #descomente caso queria o prompt completo
-    print("\n".join([m[1] for m in messages]))
+    #print("\n".join([m[1] for m in messages]))
 
     res = llm.invoke(messages)
 
